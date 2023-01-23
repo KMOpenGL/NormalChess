@@ -1,0 +1,66 @@
+<html>
+    <body>
+        <div id="main">
+            <form id="form" action="">
+                <input id="input" autocomplete="off" /><button>Play</button>
+            </form>
+        </div>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+        var username = "";
+        var socket = io();
+
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('name', input.value);
+                input.value = '';
+            }
+        });
+
+        socket.on('lobbies', function(a) {
+            var lobbies = a['list'];
+            const h = document.getElementById("main");
+            h.innerHTML = "<p>Your name is " + a["username"] + "</p>";
+            username = a["username"];
+            console.log("Showing " + lobbies.length + " lobbies.");
+
+            for (let i = 0; i < lobbies.length; i++) {
+                var l = lobbies[i];
+                console.log("Creating " + l.gameName);
+                h.innerHTML += "<p>" + l.gameName + " (" + l.playerCount + "/2) </p><button id='join" + l.gameId + "'>Join</button>";
+            }
+            
+            h.innerHTML += `
+            <p></p>
+            <form id="make" action="">
+                <input id="create" autocomplete="off" /><button>Create Lobby</button>
+            </form>
+            `;
+
+            var f = h.querySelector('#make');
+            var i = h.querySelector('#create');
+
+            f.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (i.value) {
+                    console.log("create lobby " + i.value);
+                    socket.emit('create', i.value);
+                    i.value = '';
+                }
+            });
+        });
+
+        socket.on('lobby', function(a) {
+            var lobby = a["lobby"];
+            const h = document.getElementById("main");
+            h.innerHTML = "<p>Your name is <b>" + username + "</b>. Lobby: <b>" + lobby.gameName + "</b></p>";
+        });
+        
+
+        </script>
+    </body>
+</html>
